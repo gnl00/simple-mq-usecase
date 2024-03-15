@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: rmq-uc
+  datasource:
+    url: jdbc:mysql://localhost:3316/tmall_rec?characterEncoding=utf-8
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.zaxxer.hikari.HikariDataSource
+  jpa:
+    show-sql: true
+    generate-ddl: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+        format_sql: true
