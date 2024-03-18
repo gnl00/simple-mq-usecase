@@ -15,7 +15,8 @@ create table if not exists product (
     pict_url text not null,
     category varchar(30) not null,
     brand_id varchar(30) not null,
-    seller_id varchar(30) not null
+    -- seller_id varchar(30) not null,
+    store int not null
 ) engine innodb;
 
 drop table if exists review;

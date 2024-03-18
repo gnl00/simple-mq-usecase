@@ -73,7 +73,57 @@ RocketMQ 与 Kafka 到底有什么区别？
 
 1、导入数据，使用天池[天猫推荐数据](https://tianchi.aliyun.com/dataset/140281)
 
-TODO 大文件读取并入库（1.7G）
+之前以为 Jpa 的 saveAll 是批量新增方法，今天点进去源码一看：
+
+```java
+@Transactional
+@Override
+public <S extends T> List<S> saveAll(Iterable<S> entities) {
+    Assert.notNull(entities, "Entities must not be null");
+    List<S> result = new ArrayList<>();
+    for (S entity : entities) {
+        result.add(save(entity));
+    }
+    return result;
+}
+```
+
+原来是循环调用 save 方法🤡怪不得每次插入大量数据的时候都这么慢，可恶！
+
+优化方法可以使用下面几种：
+1. 拼接批量插入 SQL
+```sql
+insert into table_name (column1, column2, column3, column4) 
+values ("", "", "", ""), ("", "", "", ""), ("", "", "", "");
+```
+[参考](https://riun.xyz/work/3825161)
+2. 使用 EntityManager#persist
+
+需要标注 @Transactional，必须是 public 修饰的方法
+
+```java
+@PersistenceContext
+private EntityManager entityManager;
+
+@Override
+@Transactional(rollbackFor = Exception.class)
+public void addBatch(List<ProjectApplyDO> list) {
+    for (ProjectApplyDO projectApplyDO : list) {
+        entityManager.persist(projectApplyDO); // 插入
+    }
+    entityManager.flush();
+    entityManager.clear();
+}
+```
+[参考1](https://www.jianshu.com/p/a8ef0b04afa8/)
+[参考2](https://www.jianshu.com/p/11153affb528)
+
+SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效果是最好的。数据量越大，SQL 拼接的优势越明显。
+
+```java
+// entityManager.persist // 25s for 10k data // 53634ms for 20k
+// sqlConcat // 4s for 10k data // 6432ms for 20k 👍
+```
 
 ## 参考
 
