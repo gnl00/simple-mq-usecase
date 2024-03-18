@@ -96,7 +96,9 @@ public <S extends T> List<S> saveAll(Iterable<S> entities) {
 insert into table_name (column1, column2, column3, column4) 
 values ("", "", "", ""), ("", "", "", ""), ("", "", "", "");
 ```
+
 [参考](https://riun.xyz/work/3825161)
+
 2. 使用 EntityManager#persist
 
 需要标注 @Transactional，必须是 public 修饰的方法
@@ -105,17 +107,32 @@ values ("", "", "", ""), ("", "", "", ""), ("", "", "", "");
 @PersistenceContext
 private EntityManager entityManager;
 
-@Override
-@Transactional(rollbackFor = Exception.class)
-public void addBatch(List<ProjectApplyDO> list) {
-    for (ProjectApplyDO projectApplyDO : list) {
-        entityManager.persist(projectApplyDO); // 插入
+@Transactional(rollbackOn = {Exception.class})
+public int batchSave(List<Product> list) {
+    int batchSize = 10000; // 设置组大小，分组插入
+    boolean hasPersist = false;
+    for (Product product : list) {
+        entityManager.persist(product); // 减少一步查询操作
+        int currCount = insertCount.incrementAndGet();
+        hasPersist = true;
+
+        if(currCount % batchSize == 0) {
+            entityManager.flush();
+            entityManager.clear();
+            hasPersist = false;
+        }
     }
-    entityManager.flush();
-    entityManager.clear();
+
+    if(hasPersist) {
+        entityManager.flush();
+        entityManager.clear();
+    }
+    return 1;
 }
 ```
+
 [参考1](https://www.jianshu.com/p/a8ef0b04afa8/)
+
 [参考2](https://www.jianshu.com/p/11153affb528)
 
 SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效果是最好的。数据量越大，SQL 拼接的优势越明显。
