@@ -1,10 +1,7 @@
 package com.ruc;
 
 import com.ruc.jpa.entity.Product;
-import com.ruc.jpa.repository.ProductRepository;
 import com.ruc.jpa.service.ProductService;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,28 +13,35 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @SpringBootTest
 public class RMQUCTest {
-    @Autowired
-    private ProductRepository productRepository;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Test
     public void insert_product() {
         List<Product> list = read("../dataset/tianchi_2014001_rec_tmall_product.txt");
         if (CollectionUtils.isEmpty(list)) return;
-        List<Product> subProd = list.subList(50000, 70000);
+        List<Product> subProd = list.subList(170000, 1000000);
+
+        // 多线程 + SQL 拼接插入 10000 * 10 条数据
 
         long start = System.currentTimeMillis();
         // Product save = productRepository.save(null);
         // productRepository.saveAll(subProd); // 27s for 10k data // 八百万+ 数据超过 30 分钟都没有插入完成
         // doInsert1(subProd); // 25s for 10k data // 53634ms for 20k
-        doInsert2(subProd); // 4s for 10k data 👍 // 6432ms for 20k
+        // doInsert2(subProd); // 4s for 10k data 👍 // 6432ms for 20k // 100K 18895ms
+
+        // doInsert2 插入 100w 数据 SQL 拼接插入出现 Java heap space OOM
+        // 如何解决？
+
+        // 多线程 + SQL 拼接
+        doInsert3(subProd); // 83w // 384213 ms
+
         long end = System.currentTimeMillis();
         System.out.println("cost time: " + (end - start));
     }
@@ -51,6 +55,47 @@ public class RMQUCTest {
 
     private void doInsert2(List<Product> list) {
         productService.batchSaveWithSql(list);
+    }
+
+    // 线程池 + SQL 拼接
+    private void doInsert3(List<Product> list) {
+        int listSize = list.size();
+
+        int groupSize = 100000; // 10w 一组
+        // 首先拆分成 10w 一组，任务均分
+        int groupCount = listSize / groupSize; // 总共能分成多少组？
+        // 解决边界数据，最后一组的数据
+        int totalSize = groupSize * groupCount;
+        int left = totalSize < listSize ? listSize - totalSize : 0;
+        if (left > 0) {
+            groupCount += 1;
+        }
+        Integer[] eachTask = new Integer[groupCount];
+        Arrays.fill(eachTask, groupSize);
+        if (left > 0) {
+            eachTask[eachTask.length - 1] += left; // 最后一组多处理一些数据
+        }
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
+        int fromIndex = 0;
+        for (Integer currTask : eachTask) {
+            // 当前线程需要处理多少数据？
+            int toIndex = fromIndex + currTask;
+            int finalFromIndex = fromIndex;
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                log.info("thread: {}, handling list from: {}, to: {}", Thread.currentThread().getName(), finalFromIndex, toIndex);
+                List<Product> products = list.subList(finalFromIndex, toIndex);
+                productService.batchSaveWithSql(products);
+            });
+            futures.add(future);
+            fromIndex = toIndex;
+        }
+
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        try {
+            allOf.get();
+        } catch (InterruptedException | ExecutionException e) {
+            log.error("run allOf failed, error: {}", e.getMessage());
+        }
     }
 
     private List<Product> read(String filepath) {
@@ -103,10 +148,5 @@ public class RMQUCTest {
         for (String s : str.split("\u0001")) {
             System.out.println(s);
         }
-    }
-
-    @Test
-    public void test_random() {
-        System.out.println((int) (Math.random() * 10) * (int) (Math.random() * 10));
     }
 }
