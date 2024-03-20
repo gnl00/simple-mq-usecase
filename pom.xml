@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.3</version>
+        <version>2.7.18</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
 
@@ -17,7 +17,9 @@
     <packaging>pom</packaging>
     <modules>
         <module>rmq-uc</module><!-- rocketmq use case-->
-        <module>kfk-uc</module><!-- kafka use case-->
+        <module>kfk-uc</module>
+        <module>rmq-uc-consumer</module>
+        <module>rmq5-sample</module><!-- kafka use case-->
     </modules>
 
     <properties>
@@ -28,6 +30,16 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-client-java</artifactId>
+                <version>5.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.rocketmq</groupId>
+                <artifactId>rocketmq-spring-boot-starter</artifactId>
+                <version>2.3.0</version>
+            </dependency>
             <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>

@@ -1,7 +1,7 @@
 package com.ruc;
 
 import com.ruc.jpa.entity.Product;
-import com.ruc.jpa.service.ProductService;
+import com.ruc.service.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +21,11 @@ import java.util.concurrent.ExecutionException;
 @Slf4j
 @SpringBootTest
 public class RMQUCTest {
+
+    @Test
+    public void insert_customer() {
+
+    }
 
     @Test
     public void insert_product() {

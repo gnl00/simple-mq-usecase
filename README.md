@@ -67,9 +67,9 @@ RocketMQ 与 Kafka 到底有什么区别？
 
 ...
 
-## Use Case
+## RMQ
 
-### RMQ 事务消息
+### 前期准备
 
 1、导入数据，使用天池[天猫推荐数据](https://tianchi.aliyun.com/dataset/140281)
 
@@ -141,6 +141,10 @@ SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效�
 // entityManager.persist // 25s for 10k data // 53634ms for 20k
 // sqlConcat // 4s for 10k data // 6432ms for 20k 👍
 ```
+
+### RMQ5
+
+> 从 RocketMQ 5.x 版本出来到现在这么久了还没有支持 SpringBoot 3.x ...
 
 ## 参考
 

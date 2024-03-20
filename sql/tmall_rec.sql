@@ -19,6 +19,12 @@ create table if not exists product (
     store int not null
 ) engine innodb;
 
+drop table if exists customer;
+create table if not exists customer (
+    id int auto_increment primary key not null,
+    account decimal not null
+) engine innodb;
+
 drop table if exists review;
 create table if not exists review (
     id int auto_increment primary key not null,

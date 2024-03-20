@@ -1,10 +1,12 @@
-package com.ruc.jpa.service;
+package com.ruc.service;
 
 import com.ruc.jpa.entity.Product;
-import jakarta.persistence.*;
-import jakarta.transaction.Transactional;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.*;
+import javax.transaction.Transactional;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +19,9 @@ public class ProductService {
 
     @PersistenceContext
     private EntityManager entityManager;
+
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
 
     @Transactional(rollbackOn = {Exception.class})
     public int batchSave(List<Product> list) {
@@ -66,7 +71,7 @@ public class ProductService {
             position += fieldLength;
         }
 
-        nativeQuery.executeUpdate(); // TODO uncomment
+        nativeQuery.executeUpdate();
     }
 
     private String buildSQL(List<Product> list) {
@@ -133,5 +138,9 @@ public class ProductService {
         // (?,?,?,?,?)
         phBuilder.deleteCharAt(phBuilder.length() - 1).append(")");
         return phBuilder.toString();
+    }
+
+    public boolean buy(Integer prodId, Integer customerId) {
+        return false;
     }
 }
