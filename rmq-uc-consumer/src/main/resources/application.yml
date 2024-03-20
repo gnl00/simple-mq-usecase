@@ -1,3 +1,5 @@
+
+
 spring:
   application:
     name: rmq-uc-consumer
@@ -18,7 +20,12 @@ spring:
 
 rocketmq:
   name-server: localhost:9876
+  endpoints: localhost:8081
   consumer:
     group: ${spring.application.name}
     topic: TestTopic
-    pull-batch-size: 5
+    pull-batch-size: 30
+
+#logging:
+#  level:
+#    root: debug

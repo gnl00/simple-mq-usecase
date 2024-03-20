@@ -145,7 +145,29 @@ SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效�
 ### RMQ5
 
 > 从 RocketMQ 5.x 版本出来到现在这么久了还没有支持 SpringBoot 3.x ...
+> 使用过程中遇到的一个问题：使用 SpringBoot 3.x 导致 RocketMQ 消费者无法接收到消息，降级到 2.7.18 表现正常。
+
+当前项目使用版本：
+- spring-boot-starter-parent:2.7.18
+- rocketmq-spring-boot-starter:2.3.0
+
+### 分布式事务
+
+- [ ] TODO
+
+### RocketMQ 消费者方法注解
+
+目前在使用 RocketMQ 的时候，需要在消费者类上标注 @RocketMQMessageListener 注解，一个消费者需要标注一次。**让我觉得有点不优雅**。
+
+那么，能不能将类注解改成方法注解，让一个类中的多个方法能处理多个 topic 呢？
+
+首先来看一下 @RocketMQMessageListener 的逻辑
+
+- [ ] TODO
+
+
+---
 
 ## 参考
 
-...
+* [Git 修改已提交内容的用户名和邮箱](https://segmentfault.com/a/1190000023612892)
