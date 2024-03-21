@@ -32,8 +32,8 @@ public class MessageListenerRegistrar {
 
     public void registerContainer(Object targetObject, Method targetMethod, RMQListener ann) {
         String consumerGroup = environment.resolvePlaceholders(ann.consumerGroup());
-        String topic = ann.topic();
-        String tag = ann.tag();
+        String topic = environment.resolvePlaceholders(ann.topic());
+        String tag = environment.resolvePlaceholders(ann.tag());
         Class<?> messageType = ann.messageType();
         try {
             createConsumer(targetObject, targetMethod, consumerGroup, topic, tag, messageType); // TODO add consumer to listener container...

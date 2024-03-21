@@ -67,11 +67,11 @@ RocketMQ 与 Kafka 到底有什么区别？
 
 ...
 
-## RMQ
+## 前期准备
 
-### 前期准备
+### 数据导入
 
-1、导入数据，使用天池[天猫推荐数据](https://tianchi.aliyun.com/dataset/140281)
+导入数据，使用天池[天猫推荐数据](https://tianchi.aliyun.com/dataset/140281)
 
 之前以为 Jpa 的 saveAll 是批量新增方法，今天点进去源码一看：
 
@@ -142,7 +142,9 @@ SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效�
 // sqlConcat // 4s for 10k data // 6432ms for 20k 👍
 ```
 
-### RMQ5
+## RocketMQ
+
+> rocketmq 本地部署推荐 [xuchengen/rocketmq](https://hub.docker.com/r/xuchengen/rocketmq) 纵享丝滑
 
 > 从 RocketMQ 5.x 版本出来到现在这么久了还没有支持 SpringBoot 3.x ...
 > 使用过程中遇到的一个问题：使用 SpringBoot 3.x 导致 RocketMQ 消费者无法接收到消息，降级到 2.7.18 表现正常。
@@ -151,9 +153,10 @@ SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效�
 - spring-boot-starter-parent:2.7.18
 - rocketmq-spring-boot-starter:2.3.0
 
-### 分布式事务
-
-- [ ] TODO
+RMQ 官方不推荐自动创建 topic，不好管理。推荐手动创建 Topic
+```shell
+sh bin/mqadmin updatetopic -n localhost:9876 -t TestTopic -c DefaultCluster
+```
 
 ### RocketMQ 消费者方法注解
 
@@ -161,7 +164,30 @@ SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效�
 
 那么，能不能将类注解改成方法注解，让一个类中的多个方法能处理多个 topic 呢？
 
-首先来看一下 @RocketMQMessageListener 的逻辑
+来看一下 @RocketMQMessageListener 的逻辑。
+
+让 @RocketMQMessageListener 能够实现对应的功能实际上是下面三个类共同实现的：
+* RocketMQMessageListenerBeanPostProcessor
+* RocketMQMessageListenerContainerRegistrar
+* DefaultRocketMQListenerContainer
+
+首先通过 RocketMQMessageListenerBeanPostProcessor 捕捉到标注有 @RocketMQMessageListener 的类，根据注解信息使用 RocketMQMessageListenerContainerRegistrar 注册 DefaultRocketMQListenerContainer。
+
+DefaultRocketMQListenerContainer 就可以粗略的看成是一个消费者，因为消费者的初始化是在 DefaultRocketMQListenerContainer 中进行的，并且 DefaultRocketMQListenerContainer 还持有了消费者对象本身以及该消费者的配置。
+
+...
+
+按照 @RocketMQMessageListener 的思路，我们也可以自定义实现一个 @RMQListener，使其可以标注在方法上，然后遍历方法创建消费者即可。
+
+> 已实现，使用 @RMQListener 注解标注在方法上即可。
+
+### 同一个消费者组 Topic 订阅
+
+<p style="color: red">同一个消费者组不能订阅不同的 Topic 👹</p>
+
+> <p style="color: coral">是的，这是第二次踩这个坑了。</p>
+
+### 分布式事务
 
 - [ ] TODO
 

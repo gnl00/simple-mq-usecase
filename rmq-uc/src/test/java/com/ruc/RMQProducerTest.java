@@ -7,19 +7,29 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.ConfigurableEnvironment;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @SpringBootTest
-public class RMQTest {
+public class RMQProducerTest {
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
 
     @Value("${rmq-uc.topic}")
     private String testTopic;
+
+    @Autowired
+    private ConfigurableEnvironment environment;
+
+    @Test
+    public void testEnv() {
+        String s = environment.resolvePlaceholders("not placeholder");
+        System.out.println(s);
+    }
 
     @Test
     public void test_topic_send() {

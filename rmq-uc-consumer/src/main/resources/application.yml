@@ -29,3 +29,9 @@ rocketmq:
 #logging:
 #  level:
 #    root: debug
+
+rmq-uc:
+  consumer:
+    group:
+      dev: ${spring.application.name}-dev
+      test: ${spring.application.name}-test

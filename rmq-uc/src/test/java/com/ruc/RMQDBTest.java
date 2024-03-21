@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @SpringBootTest
-public class RMQUCTest {
+public class RMQDBTest {
 
     @Test
     public void insert_customer() {
