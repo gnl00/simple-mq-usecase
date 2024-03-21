@@ -160,7 +160,7 @@ sh bin/mqadmin updatetopic -n localhost:9876 -t TestTopic -c DefaultCluster
 
 ### RocketMQ 消费者方法注解
 
-目前在使用 RocketMQ 的时候，需要在消费者类上标注 @RocketMQMessageListener 注解，一个消费者需要标注一次。**让我觉得有点不优雅**。
+目前在使用 RocketMQ 的时候，需要在消费者类上标注 @RocketMQMessageListener 注解，一个消费者需要标注一次。
 
 那么，能不能将类注解改成方法注解，让一个类中的多个方法能处理多个 topic 呢？
 
@@ -180,6 +180,21 @@ DefaultRocketMQListenerContainer 就可以粗略的看成是一个消费者，�
 按照 @RocketMQMessageListener 的思路，我们也可以自定义实现一个 @RMQListener，使其可以标注在方法上，然后遍历方法创建消费者即可。
 
 > 已实现，使用 @RMQListener 注解标注在方法上即可。
+
+...
+
+> Rocketmq 中的 @RocketMQMessageListener 只能标注在类上。能标注在方法上的话就可以在一个类中处理多个 Topic 或者多个 Tag，为什么不设计成可以标注在方法上？这是基于什么原因考虑的？
+> 
+> 当将 @RocketMQMessageListener 注解标注在类上时，可以将同一个 Topic 或者多个 Tag 的消息交给同一个类来处理。
+> 这样做的好处是可以将相关的消息处理逻辑封装在一个类中，提高代码的可读性和可维护性。同时，在类级别上标注 @RocketMQMessageListener 
+> 还可以方便地管理消息消费者的生命周期，并且可以避免在每个方法上都声明一遍 @RocketMQMessageListener。
+>
+> 如果将 @RocketMQMessageListener 注解标注在方法上，就会导致一个类中可能存在多个方法来处理同一个 Topic 或者多个 Tag 的消息。
+> 这样会增加代码的复杂性，不利于代码的维护和理解。另外，如果每个方法都需要声明 @RocketMQMessageListener，可能会导致代码冗余和混乱。
+> 因此，将 @RocketMQMessageListener 注解设计成只能标注在类上，是为了提高代码的可读性、可维护性和一致性。
+> from gpt
+
+> 之所以有这个想法是因为之前做的某个项目中看到了这样的用法，所以研究了一下...
 
 ### 同一个消费者组 Topic 订阅
 

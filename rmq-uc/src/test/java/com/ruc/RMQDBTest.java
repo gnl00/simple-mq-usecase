@@ -23,11 +23,6 @@ import java.util.concurrent.ExecutionException;
 public class RMQDBTest {
 
     @Test
-    public void insert_customer() {
-
-    }
-
-    @Test
     public void insert_product() {
         List<Product> list = read("../dataset/tianchi_2014001_rec_tmall_product.txt");
         if (CollectionUtils.isEmpty(list)) return;

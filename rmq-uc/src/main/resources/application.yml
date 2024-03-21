@@ -24,4 +24,7 @@ rocketmq:
     send-message-timeout: 300000
 
 rmq-uc:
-  topic: TestTopic
+  topic:
+    test: TestTopic
+    dev: DevTopic
+    tx: TxTopic

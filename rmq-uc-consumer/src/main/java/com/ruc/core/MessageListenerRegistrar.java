@@ -53,7 +53,7 @@ public class MessageListenerRegistrar {
                 try {
                     targetMethod.invoke(targetObject, messageExt);
                 } catch (IllegalAccessException | InvocationTargetException e) {
-                    log.error("execute target method failed: {}, {}, error: {}", targetObject.toString(), targetMethod.getName(), e.getMessage());
+                    log.error("emit mq listener failed, target object: {} method: {}, exception: {}", targetObject.toString(), targetMethod.getName(), e.getMessage());
                 }
             }
             log.info("consume committed");
@@ -61,8 +61,8 @@ public class MessageListenerRegistrar {
         });
         consumer.start();
         log.info("## consumer for: {} created", targetMethod.getName());
-        MessageListenerContainer.addConsumer(targetMethod.getName(), consumer);
-        log.info("## consumer registered");
+        MessageListenerContainer.addConsumer(targetObject.getClass()+ "#" +targetMethod.getName(), consumer);
+        log.info("## consumer for: {} registered", targetMethod.getName());
     }
 
 }

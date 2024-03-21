@@ -13,17 +13,22 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
-@SpringBootTest
+// @SpringBootTest
 public class RMQProducerTest {
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
 
-    @Value("${rmq-uc.topic}")
+    @Value("${rmq-uc.topic.test}")
     private String testTopic;
 
     @Autowired
     private ConfigurableEnvironment environment;
+
+    @Test
+    public void test_random() {
+        System.out.println(Math.random());
+    }
 
     @Test
     public void testEnv() {

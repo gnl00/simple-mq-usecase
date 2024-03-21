@@ -1,8 +1,14 @@
 package com.ruc.service;
 
 import com.ruc.jpa.entity.Product;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.producer.LocalTransactionState;
+import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.*;
@@ -13,6 +19,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @Service
 public class ProductService {
     private AtomicInteger insertCount = new AtomicInteger(0);
@@ -22,6 +29,23 @@ public class ProductService {
 
     @Autowired
     private RocketMQTemplate rocketMQTemplate;
+
+    @Value("${rmq-uc.topic.tx}")
+    private String txTopic;
+
+    public void sendTransaction(String txId, String msgStr) {
+        Message<String> message = MessageBuilder.withPayload(msgStr).setHeader("RMQ_TX_ID", txId).build();
+        TransactionSendResult sendResult = rocketMQTemplate.sendMessageInTransaction(txTopic, message, txId);
+        log.info("sent half message");
+        log.info("checking local transaction status...");
+        if ((Math.random() * 10) > 5) {
+            sendResult.setLocalTransactionState(LocalTransactionState.COMMIT_MESSAGE);
+            log.info("local transaction committed");
+        } else {
+            sendResult.setLocalTransactionState(LocalTransactionState.ROLLBACK_MESSAGE);
+            log.info("local transaction need to rollback");
+        }
+    }
 
     @Transactional(rollbackOn = {Exception.class})
     public int batchSave(List<Product> list) {

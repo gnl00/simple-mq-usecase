@@ -1,5 +1,3 @@
-
-
 spring:
   application:
     name: rmq-uc-consumer
@@ -32,6 +30,11 @@ rocketmq:
 
 rmq-uc:
   consumer:
+    topic:
+      test: TestTopic
+      dev: DevTopic
+      tx: TxTopic
     group:
+      tx: ${spring.application.name}-tx
       dev: ${spring.application.name}-dev
       test: ${spring.application.name}-test

@@ -26,7 +26,7 @@ public class MessageListenerPostProcessor implements ApplicationContextAware, Be
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         this.messageListenerRegistrar = this.applicationContext.getBean(MessageListenerRegistrar.class);
     }
 
