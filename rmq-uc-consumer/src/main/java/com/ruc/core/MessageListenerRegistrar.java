@@ -59,7 +59,6 @@ public class MessageListenerRegistrar {
             log.info("consume committed");
             return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
         });
-        consumer.start();
         log.info("## consumer for: {} created", targetMethod.getName());
         MessageListenerContainer.addConsumer(targetObject.getClass()+ "#" +targetMethod.getName(), consumer);
         log.info("## consumer for: {} registered", targetMethod.getName());
