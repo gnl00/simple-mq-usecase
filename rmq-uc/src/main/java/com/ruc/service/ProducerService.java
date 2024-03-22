@@ -1,8 +1,10 @@
 package com.ruc.service;
 
 import com.ruc.jpa.entity.Product;
+import com.ruc.listener.ProdLocalTransactionListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
+import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +13,7 @@ import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import javax.persistence.*;
 import javax.transaction.Transactional;
 import java.lang.reflect.Field;
@@ -21,32 +24,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
-public class ProductService {
+public class ProducerService {
     private AtomicInteger insertCount = new AtomicInteger(0);
 
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Autowired
+    @Resource
     private RocketMQTemplate rocketMQTemplate;
 
     @Value("${rmq-uc.topic.tx}")
     private String txTopic;
 
     public void sendTransaction(String txId, String msgStr) {
-        Message<String> message = MessageBuilder.withPayload(msgStr).setHeader("RMQ_TX_ID", txId).build();
+        // set global transaction id to message header
+        Message<String> message = MessageBuilder.withPayload(msgStr).setHeader("RMQ_TX_GID", txId).build();
+        // DO NOT FORGET TO SET TransactionListener
+        ((TransactionMQProducer)rocketMQTemplate.getProducer()).setTransactionListener(new ProdLocalTransactionListener());
         TransactionSendResult sendResult = rocketMQTemplate.sendMessageInTransaction(txTopic, message, txId);
         log.info("sent half message");
-        log.info("checking local transaction status...");
-        if ((Math.random() * 10) > 5) {
-            sendResult.setLocalTransactionState(LocalTransactionState.COMMIT_MESSAGE);
-            log.info("local transaction committed");
-        } else {
-            sendResult.setLocalTransactionState(LocalTransactionState.ROLLBACK_MESSAGE);
-            log.info("local transaction need to rollback");
-        }
+        log.info("executing local transaction status...");
+        // TODO finish tx message
+        System.out.println("send result ==>");
+        System.out.println(sendResult.getSendStatus());
     }
 
+    // 需要标注 @Transactional entityManager#persist 才生效
     @Transactional(rollbackOn = {Exception.class})
     public int batchSave(List<Product> list) {
         int batchSize = 10000; // 设置组大小，分组插入

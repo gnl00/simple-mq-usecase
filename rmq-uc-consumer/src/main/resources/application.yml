@@ -16,25 +16,33 @@ spring:
         jdbc:
           batch_size: 1000
 
-rocketmq:
-  name-server: localhost:9876
-  endpoints: localhost:8081
-  consumer:
-    group: ${spring.application.name}
-    topic: TestTopic
-    pull-batch-size: 30
-
 #logging:
 #  level:
 #    root: debug
 
-rmq-uc:
+rocketmq:
+  name-server: localhost:9876
+  endpoints: localhost:8081
   consumer:
-    topic:
-      test: TestTopic
-      dev: DevTopic
-      tx: TxTopic
+    group: rmq-uc-consumer
+    pull-batch-size: 30
+    topic: TxTopic
+  producer:
+    group: rmq-uc-prod
+    send-message-timeout: 300000
+
+rmq-uc:
+  topic:
+    test: TestTopic
+    dev: DevTopic
+    tx: TxTopic
+  producer:
     group:
-      tx: ${spring.application.name}-tx
-      dev: ${spring.application.name}-dev
-      test: ${spring.application.name}-test
+      tx: ${rocketmq.producer.group}-tx
+      dev: ${rocketmq.producer.group}-dev
+      test: ${rocketmq.producer.group}-test
+  consumer:
+    group:
+      tx: ${rocketmq.consumer.group}-tx
+      dev: ${rocketmq.consumer.group}-dev
+      test: ${rocketmq.consumer.group}-test

@@ -36,7 +36,7 @@ public class MessageListenerRegistrar {
         String tag = environment.resolvePlaceholders(ann.tag());
         Class<?> messageType = ann.messageType();
         try {
-            createConsumer(targetObject, targetMethod, consumerGroup, topic, tag, messageType); // TODO add consumer to listener container...
+            createConsumer(targetObject, targetMethod, consumerGroup, topic, tag, messageType);
         } catch (MQClientException e) {
             log.error("create mq client failed, error: {}", e.getMessage());
         }

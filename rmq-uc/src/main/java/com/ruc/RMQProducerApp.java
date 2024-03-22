@@ -5,11 +5,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
-public class RMQMain {
+public class RMQProducerApp {
     public static void main(String[] args) {
-        ConfigurableApplicationContext ac = SpringApplication.run(RMQMain.class, args);
-        for (String beanDefinitionName : ac.getBeanDefinitionNames()) {
-            System.out.println(beanDefinitionName);
-        }
+        ConfigurableApplicationContext ac = SpringApplication.run(RMQProducerApp.class, args);
     }
 }

@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.springframework.context.SmartLifecycle;
+import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
@@ -13,13 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Essentially is a consumer
  */
 @Slf4j
+@Component
 public class MessageListenerContainer implements SmartLifecycle {
 
     /**
      * You can put configurations of mq consumer here as a holder as well
      */
 
-    public static final Map<String, DefaultMQPushConsumer> CONSUMER_MAP = new ConcurrentHashMap<>();
+    public static Map<String, DefaultMQPushConsumer> CONSUMER_MAP = new ConcurrentHashMap<>();
 
     private static boolean IS_RUNNING = false;
 
@@ -29,6 +31,7 @@ public class MessageListenerContainer implements SmartLifecycle {
 
     @Override
     public void start() {
+        log.info("## SmartLifecycle#start");
         if (!CollectionUtils.isEmpty(CONSUMER_MAP)) {
             CONSUMER_MAP.forEach((method, consumer) -> {
                 try {

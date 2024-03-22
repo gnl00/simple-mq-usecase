@@ -1,7 +1,7 @@
 package com.ruc;
 
 import com.ruc.jpa.entity.Product;
-import com.ruc.service.ProductService;
+import com.ruc.service.ProducerService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,14 +47,14 @@ public class RMQDBTest {
     }
 
     @Autowired
-    private ProductService productService;
+    private ProducerService producerService;
     // 使用 EntityManager#persist
     public void doInsert1(List<Product> list) {
-        productService.batchSave(list);
+        producerService.batchSave(list);
     }
 
     private void doInsert2(List<Product> list) {
-        productService.batchSaveWithSql(list);
+        producerService.batchSaveWithSql(list);
     }
 
     // 线程池 + SQL 拼接
@@ -84,7 +84,7 @@ public class RMQDBTest {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 log.info("thread: {}, handling list from: {}, to: {}", Thread.currentThread().getName(), finalFromIndex, toIndex);
                 List<Product> products = list.subList(finalFromIndex, toIndex);
-                productService.batchSaveWithSql(products);
+                producerService.batchSaveWithSql(products);
             });
             futures.add(future);
             fromIndex = toIndex;

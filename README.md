@@ -204,8 +204,43 @@ DefaultRocketMQListenerContainer 就可以粗略的看成是一个消费者，�
 
 ### 分布式事务
 
-- [ ] TODO
+<p style="color: red">发送事务消息的时候需要在消费者服务同时配置生产者信息。</p>
+因为如果 [service-b] 事务消费方本地事务执行失败，需要发送消息给 [service-a] 事务发起方，让其进行事务回滚。
 
+配置
+
+```yaml
+rocketmq:
+  name-server: localhost:9876
+  endpoints: localhost:8081
+  consumer:
+    group: rmq-uc-consumer
+    pull-batch-size: 30
+  producer:
+    group: rmq-uc-prod
+    send-message-timeout: 300000
+
+rmq-uc:
+  topic:
+    test: TestTopic
+    dev: DevTopic
+    tx: TxTopic
+  producer:
+    group:
+      tx: ${rocketmq.producer.group}-tx
+      dev: ${rocketmq.producer.group}-dev
+      test: ${rocketmq.producer.group}-test
+  consumer:
+    group:
+      tx: ${rocketmq.consumer.group}-tx
+      dev: ${rocketmq.consumer.group}-dev
+      test: ${rocketmq.consumer.group}-test
+```
+
+```java
+// 生产者具体实现 [rmq-uc]#com.ruc.service.ProducerService
+// 消费者具体实现 [rmq-uc-consumer]#com.ruc.consumer.TransactionConsumer
+```
 
 ---
 
