@@ -14,8 +14,8 @@ public class ProducerController {
     @Autowired
     private ProducerService producerService;
 
-    @GetMapping("/send/tx/{txId}/{msg}")
-    public void sendTransaction(@PathVariable String txId, @PathVariable String msg) {
-        producerService.sendTransaction(txId, msg);
+    @GetMapping("/send/tx/{txId}/{msg}/{waitTime}")
+    public void sendTransaction(@PathVariable String txId, @PathVariable String msg,@PathVariable int waitTime) {
+        producerService.sendTransaction(txId, msg, waitTime);
     }
 }

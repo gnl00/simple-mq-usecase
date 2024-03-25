@@ -238,9 +238,21 @@ rmq-uc:
 ```
 
 ```java
-// 生产者具体实现 [rmq-uc]#com.ruc.service.ProducerService
-// 消费者具体实现 [rmq-uc-consumer]#com.ruc.consumer.TransactionConsumer
+// 生产者具体实现
+// [rmq-uc]#com.ruc.service.ProducerService
+// [rmq-uc]#com.ruc.listener.ProdTransactionListener
+
+// 消费者具体实现
+// [rmq-uc-consumer]#com.ruc.consumer.TransactionMessageConsumer
 ```
+
+---
+
+**使用心得**
+
+生产者收到消息回查后，需要检查对应消息的本地事务执行的最终结果。
+
+生产者根据检查得到的本地事务的最终状态**再次提交二次确认**。所以<span style="color: red">消费者需要注意处理消息重复消费的情况</span>。
 
 ---
 

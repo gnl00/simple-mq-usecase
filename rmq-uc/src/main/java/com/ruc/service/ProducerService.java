@@ -1,13 +1,12 @@
 package com.ruc.service;
 
 import com.ruc.jpa.entity.Product;
-import com.ruc.listener.ProdLocalTransactionListener;
+import com.ruc.listener.ProdTransactionListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
 import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -36,17 +35,24 @@ public class ProducerService {
     @Value("${rmq-uc.topic.tx}")
     private String txTopic;
 
-    public void sendTransaction(String txId, String msgStr) {
+    @Transactional
+    public void sendTransaction(String txId, String msgStr, int waitTime) {
         // set global transaction id to message header
         Message<String> message = MessageBuilder.withPayload(msgStr).setHeader("RMQ_TX_GID", txId).build();
-        // DO NOT FORGET TO SET TransactionListener
-        ((TransactionMQProducer)rocketMQTemplate.getProducer()).setTransactionListener(new ProdLocalTransactionListener());
-        TransactionSendResult sendResult = rocketMQTemplate.sendMessageInTransaction(txTopic, message, txId);
+        ((TransactionMQProducer)rocketMQTemplate.getProducer()).setTransactionListener(new ProdTransactionListener(waitTime));
+
         log.info("sent half message");
         log.info("executing local transaction status...");
-        // TODO finish tx message
-        System.out.println("send result ==>");
-        System.out.println(sendResult.getSendStatus());
+        // DO NOT FORGET TO SET TransactionListener
+
+        TransactionSendResult sendResult = rocketMQTemplate.sendMessageInTransaction(txTopic, message, txId);
+
+        if (sendResult.getLocalTransactionState().equals(LocalTransactionState.COMMIT_MESSAGE)) {
+            log.info("transaction id ==> {}", sendResult.getTransactionId());
+            log.info("tx execute successfully");
+        } else {
+            log.info("tx execute failed");
+        }
     }
 
     // 需要标注 @Transactional entityManager#persist 才生效
