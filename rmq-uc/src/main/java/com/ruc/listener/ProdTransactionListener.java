@@ -26,10 +26,11 @@ public class ProdTransactionListener implements TransactionListener {
         String transactionId = msg.getTransactionId();
 
         try {
-            log.info("do something...");
+            log.info("executing local transaction...");
             TimeUnit.SECONDS.sleep(waitTime);
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            log.error("local transaction execute failed, exception: {}", e.getMessage());
+            return LocalTransactionState.ROLLBACK_MESSAGE;
         }
 
         if ((Math.random() * 10) > 5) {
@@ -54,7 +55,7 @@ public class ProdTransactionListener implements TransactionListener {
 
         String transactionId = msg.getTransactionId();
         if (!localDBMS.containsKey(transactionId)) {
-            return LocalTransactionState.UNKNOW;
+            return LocalTransactionState.UNKNOW; // 返回 UNKNOW 状态的话 RocketMQ 还会再次回查
         }
 
         if (localDBMS.get(transactionId)) {

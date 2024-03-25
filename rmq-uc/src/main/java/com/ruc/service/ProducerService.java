@@ -4,6 +4,7 @@ import com.ruc.jpa.entity.Product;
 import com.ruc.listener.ProdTransactionListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.LocalTransactionState;
+import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.client.producer.TransactionMQProducer;
 import org.apache.rocketmq.client.producer.TransactionSendResult;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -39,19 +40,18 @@ public class ProducerService {
     public void sendTransaction(String txId, String msgStr, int waitTime) {
         // set global transaction id to message header
         Message<String> message = MessageBuilder.withPayload(msgStr).setHeader("RMQ_TX_GID", txId).build();
+        // DO NOT FORGET TO SET TransactionListener
         ((TransactionMQProducer)rocketMQTemplate.getProducer()).setTransactionListener(new ProdTransactionListener(waitTime));
 
-        log.info("sent half message");
-        log.info("executing local transaction status...");
-        // DO NOT FORGET TO SET TransactionListener
-
+        log.info("half message sent");
+        // 会在此处等待，直到事务执行完成（commit or rollback），才会向后继续执行
         TransactionSendResult sendResult = rocketMQTemplate.sendMessageInTransaction(txTopic, message, txId);
 
         if (sendResult.getLocalTransactionState().equals(LocalTransactionState.COMMIT_MESSAGE)) {
             log.info("transaction id ==> {}", sendResult.getTransactionId());
-            log.info("tx execute successfully");
+            log.info("tx message send success");
         } else {
-            log.info("tx execute failed");
+            log.info("tx message send failed");
         }
     }
 

@@ -34,6 +34,7 @@ public class TransactionMessageConsumer implements RocketMQListener<MessageExt> 
 
         // do some transaction things
         // ...
+        // 如果事务执行失败，本地事务回滚。此外还需要发送事务消息给 [事务发起方] 让它也进行回滚。
 
         CONSUMED_MSG_STORE.put(transactionId, true);
     }
