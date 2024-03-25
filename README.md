@@ -204,6 +204,8 @@ DefaultRocketMQListenerContainer 就可以粗略的看成是一个消费者，�
 
 ### 分布式事务
 
+> 这篇文章写得还不错：[分布式事务](https://github.com/allentofight/easy-cs/blob/main/%E5%88%86%E5%B8%83%E5%BC%8F/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%EF%BC%8C%E7%9C%8B%E8%BF%99%E7%AF%87%E7%9C%9F%E7%9A%84%E5%A4%9F%E4%BA%86!.md)
+
 <p style="color: red">发送事务消息的时候需要在消费者服务同时配置生产者信息。</p>
 因为如果 [service-b] 事务消费方本地事务执行失败，需要发送消息给 [service-a] 事务发起方，让其进行事务回滚。
 

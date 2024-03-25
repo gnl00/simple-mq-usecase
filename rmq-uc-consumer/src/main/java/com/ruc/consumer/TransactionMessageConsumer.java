@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
@@ -20,12 +22,15 @@ import java.util.concurrent.ConcurrentHashMap;
 @RocketMQMessageListener(consumerGroup = "${rmq-uc.consumer.group.tx}", topic = "${rmq-uc.topic.tx}")
 public class TransactionMessageConsumer implements RocketMQListener<MessageExt> {
 
+    @Autowired
+    private RocketMQTemplate rocketMQTemplate;
+
     private static final Map<String, Boolean> CONSUMED_MSG_STORE = new ConcurrentHashMap<>();
 
     @Override
     public void onMessage(MessageExt msgExt) {
         String transactionId = msgExt.getTransactionId();
-        if (CONSUMED_MSG_STORE.containsKey(transactionId) && CONSUMED_MSG_STORE.get(transactionId)) {
+        if (msgExt.getReconsumeTimes() > 0 && CONSUMED_MSG_STORE.containsKey(transactionId) && CONSUMED_MSG_STORE.get(transactionId)) {
             log.info("transaction message with tx-id ==> {} already consumed", transactionId);
             return;
         }
@@ -35,6 +40,7 @@ public class TransactionMessageConsumer implements RocketMQListener<MessageExt> 
         // do some transaction things
         // ...
         // 如果事务执行失败，本地事务回滚。此外还需要发送事务消息给 [事务发起方] 让它也进行回滚。
+        // rocketMQTemplate.sendMessageInTransaction("RollbackTopic", null, null);
 
         CONSUMED_MSG_STORE.put(transactionId, true);
     }
