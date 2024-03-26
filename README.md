@@ -258,6 +258,151 @@ rmq-uc:
 
 ---
 
+## Docker & OrbStack 网络映射
+
+> 这一节是在使用 Kafka 的时候遇到的坑，思考了一下应该把它放在 Kafka 前面比较好，避免后面踩坑。
+
+当前项目是在 macOS 下进行开发的，使用 homebrew 来安装 docker，使用 OrbStack 来作为 docker 管理工具。在开发过程中踩了一些 docker 网络映射的坑。
+
+首先将 node_exporter 安装在宿主机之后，通过 docker 部署 Prometheus，发现 Prometheus 配置
+
+```yaml
+scrape_configs:
+  - job_name: "env-monitor"
+    static_configs:
+      - targets: ["localhost:9100"]
+```
+
+<p style="color: red">无法访问到宿主机网络。</p>
+
+需要修改成 `dokcer.for.mac.localhost:9100` 才可以正常访问。
+
+除了使用 `dokcer.for.mac.localhost` 还有一个解决办法就是使用 `--net=host` 参数。
+将 Docker 容器网络与宿主机的网络从默认的 `--net=bridge` 桥接模式修改成 `--net=host` 主机模式，这样一来就可以通过 `localhost` 直接访问到宿主机网络。
+
+```shell
+# 指定了 --net=host 的情况下 -p 8080:8080 是不生效的
+# 什么意思呢？在指定了 --net=host 的情况下 -p 9090:8080 的话无法通过 localhost:9090 访问，端口映射会失效，只能通过 localhost:8080 访问
+# 我在这里只是做一个标记
+docker run -it -p 8080:8080 --net=host ...
+```
+
+...
+
+因为在这一小节中使用到的服务：
+* kafka
+* kafka-ui
+* prometheus
+* prometheus_kafka_adapter
+
+都是使用 Docker 来进行部署的，所以在部署的时候最好加上 `--net=host` 参数防止网络连接出现异常。
+
+---
+
+## Kafka
+
+Kafka 最常见的一个使用场景可能就是日志收集了，本次使用 [node_exporter](https://github.com/prometheus/node_exporter) 收集当前机器上的运行日志。
+
+> macOS 使用 OrbStack 作为 Docker 客户端的时候需要使用 `docker.for.mac.localhost` 来进行对宿主机的访问。
+
+### Prometheus
+
+1、配置修改
+
+修改 `prometheus.yml` 配置
+```yaml
+# A scrape configuration containing exactly one endpoint to scrape:
+# Here it's Prometheus itself.
+scrape_configs:
+  # The job name is added as a label `job=<job_name>` to any timeseries scraped from this config.
+  - job_name: "prometheus"
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    static_configs:
+      - targets: ["localhost:9090"]
+  - job_name: "env-monitor"
+    static_configs:
+      - targets: ["localhost:9100"]
+
+```
+
+docker 部署
+
+```shell
+docker run \
+    --net=host \
+    -p 9090:9090 \
+    -v ./prometheus.yml:/etc/prometheus/prometheus.yml -d --name=prmth \
+    prom/prometheus
+```
+
+2、将自定义应用暴露给 prometheus 监控，[参考](https://help.aliyun.com/zh/prometheus/use-cases/connect-spring-boot-applications-to-managed-service-for-prometheus)
+
+### 日志收集
+
+1、[docker 启动 kafka](https://kafka.apache.org/documentation/#docker)
+
+```shell
+docker pull apache/kafka:latest
+docker run --name=kafka -d --net=host -p 9092:9092 apache/kafka:latest
+```
+
+2、创建 topic
+
+```shell
+/opt/kafka/bin$ sh kafka-topics.sh --list --bootstrap-server=localhost:9092
+/opt/kafka/bin$ sh kafka-topics.sh --create --topic=prometheus-metric --bootstrap-server=localhost:9092
+```
+
+3、将 Prometheus 收集到的数据写到 Kafka
+
+部署 prometheus_kafka_adapter
+
+```shell
+docker run -d --name prometheus-kafka-adapter-01 --restart=always -m 2g \
+--net=host \
+-e KAFKA_BROKER_LIST=localhost:9092 \
+-e KAFKA_TOPIC=prometheus-metric \
+-e PORT=10401 \
+-e SERIALIZATION_FORMAT=json \
+-e GIN_MODE=release \
+-e LOG_LEVEL=debug \
+-p 10401:10401 \
+telefonica/prometheus-kafka-adapter:1.9.0
+```
+
+数据流向如下
+
+```shell
+prometheus_xxx_exporter ==> prometheus ==> prometheus_kafka_adapter ==> kafka 存放一段时间 ==> DB
+```
+
+部署情况如下：
+
+* kafka docker 部署
+* node_exporter 宿主机部署
+* [kafka_exporter](https://github.com/danielqsj/kafka_exporter) docker 部署
+* prometheus docker 部署
+* prometheus_kafka_adapter docker 部署
+
+### Kafka WebUI
+
+* [kafka-ui](https://github.com/provectus/kafka-ui)
+* [kafdrop](https://github.com/obsidiandynamics/kafdrop)
+
+使用 kafka-ui：
+```shell
+# 指定了 --net=host 的情况下 -p 8080:8080 是不生效的
+# 什么意思呢？在指定了 --net=host 的情况下 -p 9090:8080 的话无法通过 localhost:9090 访问，端口映射会失效，只能通过 localhost:8080 访问
+# 我在这里只是做一个标记
+docker run -it -p 8080:8080 --net=host -e DYNAMIC_CONFIG_ENABLED=true provectuslabs/kafka-ui
+```
+
+---
+
 ## 参考
 
 * [Git 修改已提交内容的用户名和邮箱](https://segmentfault.com/a/1190000023612892)
+* [Docker 网络参数](https://yeasy.gitbook.io/docker_practice/underly/network)

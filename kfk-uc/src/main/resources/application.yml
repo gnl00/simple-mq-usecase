@@ -1,0 +1,43 @@
+server:
+  port: 8089
+
+spring:
+  application:
+    name: kfk-uc-logging
+  kafka:
+    consumer:
+      client-id: ${spring.application.name} # 唯一客户端 Id
+      bootstrap-servers: localhost:9092
+      group-id: metric-logging-group
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+    producer:
+      batch-size: 5000000
+    properties:
+      linger-ms: 0
+      max-request-size: 10485760
+
+management:
+  server:
+    port: 9091
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    tags:
+      application: ${spring.application.name}
+
+rocketmq:
+  name-server: localhost:9876
+  endpoints: localhost:8081
+  consumer:
+    group: rmq-uc-consumer
+    pull-batch-size: 30
+    topic: prometheus-metric
+  producer:
+    group: rmq-uc-prod
+    send-message-timeout: 300000
