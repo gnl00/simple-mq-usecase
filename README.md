@@ -317,9 +317,13 @@ docker run -it -p 8080:8080 --net=host ...
 
 ## Kafka
 
-Kafka 最常见的一个使用场景可能就是日志收集了，本次使用 [node_exporter](https://github.com/prometheus/node_exporter) 收集当前机器上的运行日志。
+**应用场景**
 
-> macOS 使用 OrbStack 作为 Docker 客户端的时候需要使用 `docker.for.mac.localhost` 来进行对宿主机的访问。
+* 日志收集，指标监控
+* 消息队列
+* 数据复制与同步，将数据从数据源复制到多个目标，实现数据备份，数据同步等
+
+---
 
 ### Prometheus
 
@@ -357,6 +361,8 @@ docker run \
 2、将自定义应用暴露给 prometheus 监控，[参考](https://help.aliyun.com/zh/prometheus/use-cases/connect-spring-boot-applications-to-managed-service-for-prometheus)
 
 ### 日志收集
+
+0、本次使用 [node_exporter](https://github.com/prometheus/node_exporter) 收集当前机器上的运行日志，部署 node_exporter 到宿主机上
 
 1、[docker 启动 kafka](https://kafka.apache.org/documentation/#docker)
 
