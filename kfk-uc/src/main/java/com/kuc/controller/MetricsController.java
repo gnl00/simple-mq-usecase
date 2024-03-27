@@ -24,6 +24,7 @@ public class MetricsController {
     public void init() {
         // 添加自定义监控指标
         // 执行请求 http://localhost:9091/actuator/prometheus 即可看到
+        // 添加到 MeterRegistry 的 tag 可以看成公共 tag，大多数监控都会包含这部分公共的 tag
         meterRegistry.config()
                 .commonTags("foo", "bar")
                 .commonTags("region", "hangzhou"); // key -> value
@@ -38,9 +39,15 @@ public class MetricsController {
     @Timed(value = "v1", description = "visit http://localhost:9091/actuator/metrics/v1", histogram = true)
     // @Counted
     @GetMapping("/index")
-    public void v1() {
+    public void index() {
         log.info("request for MetricsController#index");
         // Gauge 表示一个可以任意上下浮动的单数值度量 Meter，Gauge 通常用于变动的测量值，如当前的内存使用情况或运行状态中的线程数
         // Metrics.gauge();
+    }
+
+    @Timed(value = "v2", description = "visit http://localhost:9091/actuator/metrics/v2", histogram = true)
+    @GetMapping("/about")
+    public void about() {
+        log.info("request for MetricsController#about");
     }
 }

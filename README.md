@@ -146,6 +146,22 @@ SQL 拼接实现的时候比 EntityManager.persist 麻烦，但是实现的效�
 
 > rocketmq 本地部署推荐 [xuchengen/rocketmq](https://hub.docker.com/r/xuchengen/rocketmq) 纵享丝滑
 
+```shell
+docker run -itd \
+ --name=rocketmq02 \
+ --hostname rocketmq02 \
+ --restart=always \
+ -p 8081:8080 \
+ -p 9876:9876 \
+ -p 10909:10909 \
+ -p 10911:10911 \
+ -p 10912:10912 \
+ -v rocketmq_data:/home/app/data \
+ -v /etc/localtime:/etc/localtime \
+ -v /var/run/docker.sock:/var/run/docker.sock \
+ xuchengen/rocketmq:latest
+```
+
 > 从 RocketMQ 5.x 版本出来到现在这么久了还没有支持 SpringBoot 3.x ...
 > 使用过程中遇到的一个问题：使用 SpringBoot 3.x 导致 RocketMQ 消费者无法接收到消息，降级到 2.7.18 表现正常。
 
@@ -321,10 +337,10 @@ scrape_configs:
     # scheme defaults to 'http'.
 
     static_configs:
-      - targets: ["localhost:9090"]
+      - targets: ["docker.for.mac.localhost:9090"]
   - job_name: "env-monitor"
     static_configs:
-      - targets: ["localhost:9100"]
+      - targets: ["docker.for.mac.localhost:9100"]
 
 ```
 
@@ -399,6 +415,10 @@ prometheus_xxx_exporter ==> prometheus ==> prometheus_kafka_adapter ==> kafka �
 # 我在这里只是做一个标记
 docker run -it -p 8080:8080 --net=host -e DYNAMIC_CONFIG_ENABLED=true provectuslabs/kafka-ui
 ```
+
+### Kafka Error: MESSAGE_TOO_LARGE
+
+* [kafka调整消息大小](https://zhuanlan.zhihu.com/p/433515452)
 
 ---
 
