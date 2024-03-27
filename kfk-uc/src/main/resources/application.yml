@@ -16,9 +16,9 @@ spring:
       value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
     producer:
       batch-size: 5000000
-    properties:
-      linger-ms: 0
-      max-request-size: 10485760
+    properties: # 在项目启动的时候可以在控制台看到生效的配置，可配置的属性可以在这里 https://kafka.apache.org/documentation/#configuration 看到
+      linger-ms: 0 # 消息到 sender 缓冲区后等待多久发送？
+      max-request-size: 10485760 # 单位 B
 
 management:
   server:
